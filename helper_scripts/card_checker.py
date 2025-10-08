@@ -71,3 +71,53 @@ def is_valid_credit_card(number):
             return card_type
     # If not valid, return 'Unknown'
     return "Unknown"
+
+def is_valid_expiry(month, year):
+    """
+    Check if the given expiry date is valid (not in the past).
+
+    Args:
+        month (int): The expiry month (1-12).
+        year (int): The expiry year (four digits).
+
+    Returns:
+        bool: True if the expiry date is valid, False otherwise.
+    """
+    from datetime import datetime
+
+    # Get the current date
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    # Check if the year is in the past
+    if year < current_year:
+        return False
+    # If the year is the current year, check the month
+    elif year == current_year and month < current_month:
+        return False
+    # If the month is not between 1 and 12, it's invalid
+    elif month < 1 or month > 12:
+        return False
+    # Otherwise, the expiry date is valid
+    return True
+
+def is_valid_cvc(cvc, card_type):
+    """
+    Check if the given CVC is valid based on the card type.
+
+    Args:
+        cvc (str): The CVC code as a string.
+        card_type (str): The type of the card ('Amex', 'Visa', 'Mastercard').
+
+    Returns:
+        bool: True if the CVC is valid, False otherwise.
+    """
+    if not cvc.isdigit():
+        return False
+    if card_type == 'Amex':
+        return len(cvc) == 4
+    elif card_type in ['Visa', 'Mastercard']:
+        return len(cvc) == 3
+    else:
+        return False
