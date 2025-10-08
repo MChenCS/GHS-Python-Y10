@@ -30,7 +30,7 @@ def get_card_type(number):
     else:
         return 'Unknown'
 
-def is_valid_credit_card(number):
+def is_valid_card(number):
     """
     Check if the given number is a valid credit card number using the Luhn algorithm.
 
@@ -113,11 +113,15 @@ def is_valid_cvc(cvc, card_type):
     Returns:
         bool: True if the CVC is valid, False otherwise.
     """
+    # CVC must be all digits
     if not cvc.isdigit():
         return False
+    # American Express cards have a 4-digit CVC
     if card_type == 'Amex':
         return len(cvc) == 4
+    # Visa and Mastercard have a 3-digit CVC
     elif card_type in ['Visa', 'Mastercard']:
         return len(cvc) == 3
+    # Other card types are not supported
     else:
         return False
