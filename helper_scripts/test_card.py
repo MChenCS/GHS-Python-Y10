@@ -3,7 +3,7 @@ from datetime import datetime
 
 def test_get_card_type():
     tests = [
-        ('378282246310005', 'Amex'),
+        ('340000100669947', 'Amex'),
         ('371449635398431', 'Amex'),
         ('4111111111111111', 'Visa'),
         ('4012888888881881', 'Visa'),
