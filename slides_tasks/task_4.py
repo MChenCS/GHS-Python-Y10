@@ -67,8 +67,11 @@ def add_addons(base_price, number_of_guests, length_of_stay):
     total_addon_price = 0
     # For each addon option, ask user if they want it, and calculate price accordingly
     for addon in ROOM_ADDONS:
-        print(f"You can add {addon} for {pretty_print_currency(ROOM_ADDONS[addon]['price'])} {'per person' if ROOM_ADDONS[addon]['per_person'] else ''} {'per night' if ROOM_ADDONS[addon]['per_night'] else ''}")
+        print(f"You can add {addon} for {pretty_print_currency(ROOM_ADDONS[addon]['price'])} {'per person' if ROOM_ADDONS[addon]['per_person'] else ''} {'per night' if ROOM_ADDONS[addon]['per_night'] else ''} {'per stay' if not ROOM_ADDONS[addon]['per_night'] and not ROOM_ADDONS[addon]['per_person'] else ''}")
         choice = input(f"Would you like to add {addon}? (yes/no): ").strip().lower()
+        while choice != "yes" and choice != "no":
+            print("Please answer 'yes' or 'no'.")
+            choice = input(f"Would you like to add {addon}? (yes/no): ").strip().lower()
         if choice == 'yes':
             addon_price = ROOM_ADDONS[addon]['price']
             if ROOM_ADDONS[addon]['per_person']:
@@ -82,11 +85,11 @@ def find_available_rooms(number_of_guests):
     """
     Displays available room types based on the number of guests.
     """
-    print(f"Available room types for {number_of_guests} guests:")
     available_rooms = [room for room, data in ROOM_DATA.items() if data["max_occupancy"] >= number_of_guests]
     if available_rooms:
+        print(f"Available room types for {number_of_guests} guests:")
         for room in available_rooms:
-            print(f"- {room.capitalize()} (Max Occupancy: {ROOM_DATA[room]['max_occupancy']}, Price per night: {pretty_print_currency(ROOM_DATA[room]['price'])})")
+            print(f"- {room.capitalize()} ({pretty_print_currency(ROOM_DATA[room]['price'])} per night)")
     else:
         print("No rooms available for the specified number of guests.")
     return available_rooms
@@ -96,24 +99,41 @@ if __name__ == "__main__":
     check_in_date_str = input("Enter check-in date (YYYY-MM-DD): ")
     check_out_date_str = input("Enter check-out date (YYYY-MM-DD): ")
     number_of_guests = input("Enter number of guests: ")
+
     # Capture and check number of guests
     while not number_of_guests.isdigit() or int(number_of_guests) <= 0:
         print("Please enter a valid positive integer for number of guests.")
         number_of_guests = input("Enter number of guests: ")
     number_of_guests = int(number_of_guests)
+
     # Use calculate_dates function to calculate length of stay, also check-in, check-out strings to date objects
     check_in_date, check_out_date, length_of_stay = calculate_dates(check_in_date_str, check_out_date_str)
+
     # Check if exist, meaning dates were valid
     if check_in_date and check_out_date:
-        print(f"Check-in Date: {check_in_date}")
-        print(f"Check-out Date: {check_out_date}")
         print(f"Length of Stay: {length_of_stay} days")
+
         # Capture room type and calculate total price, validation is done in calculate_price function
-        room_type = input(f"Enter room type ({', '.join(ROOM_DATA.keys())}): ").strip().lower()
+        available_rooms = find_available_rooms(number_of_guests)
+        while not available_rooms:
+            number_of_guests = input("Enter a different number of guests: ")
+            while not number_of_guests.isdigit() or int(number_of_guests) <= 0:
+                print("Please enter a valid positive integer for number of guests.")
+                number_of_guests = input("Enter number of guests: ")
+            number_of_guests = int(number_of_guests)
+            available_rooms = find_available_rooms(number_of_guests)
+        
+        room_type = input(f"Enter room type: ").strip().lower()
+
+        while room_type not in available_rooms:
+            print(f"Selected room type '{room_type}' is not available for {number_of_guests} guests.")
+            room_type = input(f"Enter room type ({', '.join(available_rooms)}): ").strip().lower()
         total_price = calculate_price(room_type, length_of_stay)
+
         # Add addons to total price
         if total_price is not None:
             total_price = add_addons(total_price, number_of_guests, length_of_stay)
+            
         # Display results
         if total_price is not None:
             print(f"Total Price for {length_of_stay} days in a {room_type} room: {pretty_print_currency(total_price, CURRENCY)}")
