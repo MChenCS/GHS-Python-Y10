@@ -60,7 +60,7 @@ def pretty_print_currency(amount, currency=CURRENCY):
     """
     return f"{currency} {amount:,.2f}"
 
-def add_addons(base_price, number_of_guests, length_of_stay):
+def add_addons(number_of_guests, length_of_stay):
     """
     Captures and adds optional addons to the base price.
     """
@@ -79,7 +79,7 @@ def add_addons(base_price, number_of_guests, length_of_stay):
             if ROOM_ADDONS[addon]['per_night']:
                 addon_price *= length_of_stay
             total_addon_price += addon_price
-    return base_price + total_addon_price
+    return total_addon_price
 
 def find_available_rooms(number_of_guests):
     """
@@ -95,47 +95,47 @@ def find_available_rooms(number_of_guests):
     return available_rooms
 
 if __name__ == "__main__":
-    # Capture check-in, check-out dates as strings
+    # Capture check-in, check-out dates as strings, convert to date objects and calculate length of stay
     check_in_date_str = input("Enter check-in date (YYYY-MM-DD): ")
     check_out_date_str = input("Enter check-out date (YYYY-MM-DD): ")
-    number_of_guests = input("Enter number of guests: ")
+    check_in_date, check_out_date, length_of_stay = calculate_dates(check_in_date_str, check_out_date_str)
 
+    while not check_in_date or not check_out_date:
+        check_in_date_str = input("Enter check-in date (YYYY-MM-DD): ")
+        check_out_date_str = input("Enter check-out date (YYYY-MM-DD): ")
+        check_in_date, check_out_date, length_of_stay = calculate_dates(check_in_date_str, check_out_date_str)
+    
     # Capture and check number of guests
+    number_of_guests = input("Enter number of guests: ")
     while not number_of_guests.isdigit() or int(number_of_guests) <= 0:
         print("Please enter a valid positive integer for number of guests.")
         number_of_guests = input("Enter number of guests: ")
     number_of_guests = int(number_of_guests)
 
-    # Use calculate_dates function to calculate length of stay, also check-in, check-out strings to date objects
-    check_in_date, check_out_date, length_of_stay = calculate_dates(check_in_date_str, check_out_date_str)
-
-    # Check if exist, meaning dates were valid
-    if check_in_date and check_out_date:
-        print(f"Length of Stay: {length_of_stay} days")
-
-        # Capture room type and calculate total price, validation is done in calculate_price function
+    # Find available rooms based on number of guests
+    available_rooms = find_available_rooms(number_of_guests)
+    while not available_rooms:
+        number_of_guests = input("Enter a different number of guests: ")
+        while not number_of_guests.isdigit() or int(number_of_guests) <= 0:
+            print("Please enter a valid positive integer for number of guests.")
+            number_of_guests = input("Enter number of guests: ")
+        number_of_guests = int(number_of_guests)
         available_rooms = find_available_rooms(number_of_guests)
-        while not available_rooms:
-            number_of_guests = input("Enter a different number of guests: ")
-            while not number_of_guests.isdigit() or int(number_of_guests) <= 0:
-                print("Please enter a valid positive integer for number of guests.")
-                number_of_guests = input("Enter number of guests: ")
-            number_of_guests = int(number_of_guests)
-            available_rooms = find_available_rooms(number_of_guests)
+
+    # Capture room type and check if selected room type is available
+    room_type = input(f"Enter room type: ").strip().lower()
+    while room_type not in available_rooms:
+        print(f"Selected room type '{room_type}' is not available for {number_of_guests} guests.")
+        room_type = input(f"Enter room type ({', '.join(available_rooms)}): ").strip().lower()
+    
+    # Calculate base price, assuming room types & length of stay checks out
+    total_price = calculate_price(room_type, length_of_stay)
+
+    # Add addons to price
+    total_price = total_price + add_addons(number_of_guests, length_of_stay)
         
-        room_type = input(f"Enter room type: ").strip().lower()
-
-        while room_type not in available_rooms:
-            print(f"Selected room type '{room_type}' is not available for {number_of_guests} guests.")
-            room_type = input(f"Enter room type ({', '.join(available_rooms)}): ").strip().lower()
-        total_price = calculate_price(room_type, length_of_stay)
-
-        # Add addons to total price
-        if total_price is not None:
-            total_price = add_addons(total_price, number_of_guests, length_of_stay)
-            
-        # Display results
-        if total_price is not None:
-            print(f"Total Price for {length_of_stay} days in a {room_type} room: {pretty_print_currency(total_price, CURRENCY)}")
-        else:
-            print("Could not calculate total price due to invalid input.")
+    # Display results
+    if total_price is not None:
+        print(f"Total Price for your {length_of_stay} night stay is {pretty_print_currency(total_price, CURRENCY)}")
+    else:
+        print("Could not calculate total price due to invalid input.")
