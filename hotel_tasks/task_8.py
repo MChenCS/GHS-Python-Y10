@@ -1,5 +1,6 @@
-
+import card_checker
 from datetime import date
+import random
 
 # Fixed constants
 ROOM_DATA = {
@@ -94,7 +95,25 @@ def find_available_rooms(number_of_guests):
         print("No rooms available for the specified number of guests.")
     return available_rooms
 
-if __name__ == "__main__": # Restructured the main program since it's getting too messy
+def generate_room_number(room_type):
+    """
+    Generates a random room number based on the room type.
+    """
+    if room_type not in ROOM_DATA:
+        print(f"Invalid room type. Available types: {', '.join(ROOM_DATA.keys())}")
+        return None
+    room_ranges = ROOM_DATA[room_type]["room_number_range"]
+    selected_range = random.choice(room_ranges)
+    return random.randint(selected_range[0], selected_range[1])
+
+def generate_confirmation_code(length=6):
+    """
+    Generates a random alphanumeric confirmation code of given length.
+    """
+    characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    return ''.join(random.choice(characters) for _ in range(length))
+
+if __name__ == "__main__":
     # Capture check-in, check-out dates as strings, convert to date objects and calculate length of stay
     check_in_date_str = input("Enter check-in date (YYYY-MM-DD): ")
     check_out_date_str = input("Enter check-out date (YYYY-MM-DD): ")
@@ -139,3 +158,50 @@ if __name__ == "__main__": # Restructured the main program since it's getting to
         print(f"Total Price for your {length_of_stay} night stay is {pretty_print_currency(total_price, CURRENCY)}")
     else:
         print("Could not calculate total price due to invalid input.")
+
+    # Check if card number is valid and obtain card type
+    card_number = input("Enter your card number (no spaces): ").strip()
+    card_type = card_checker.get_card_type(card_number)
+    while card_checker.is_valid_card(card_number) == "Unknown":
+        print("Invalid card number. Please try again.")
+        card_number = input("Enter your card number (no spaces): ").strip()
+        card_type = card_checker.get_card_type(card_number)
+    
+    # Check if expiry date is valid (input only)
+    card_expiry_month = input("Enter card expiry month (MM): ").strip()
+    card_expiry_year = input("Enter card expiry year (YYYY): ").strip()
+    while not card_expiry_month.isdigit() or not card_expiry_year.isdigit() or not card_checker.is_valid_expiry(int(card_expiry_month), int(card_expiry_year)):
+        print("Invalid expiry date. Please try again.")
+        card_expiry_month = input("Enter card expiry month (MM): ").strip()
+        card_expiry_year = input("Enter card expiry year (YYYY): ").strip()
+    card_expiry_month = int(card_expiry_month)
+    card_expiry_year = int(card_expiry_year)
+
+    # Check if expiry date is valid (function)
+    while not card_checker.is_valid_expiry(card_expiry_month, card_expiry_year):
+        print("Invalid expiry date. Please try again.")
+        card_expiry_month = input("Enter card expiry month (MM): ").strip()
+        card_expiry_year = input("Enter card expiry year (YYYY): ").strip()
+        while not card_expiry_month.isdigit() or not card_expiry_year.isdigit():
+            print("Please enter numeric values for month and year.")
+            card_expiry_month = input("Enter card expiry month (MM): ").strip()
+            card_expiry_year = input("Enter card expiry year (YYYY): ").strip()
+        card_expiry_month = int(card_expiry_month)
+        card_expiry_year = int(card_expiry_year)
+
+    # Check if CVC is valid
+    card_cvc = input("Enter card CVC: ").strip()
+    while not card_checker.is_valid_cvc(card_cvc, card_type):
+        print("Invalid CVC. Please try again.")
+        card_cvc = input("Enter card CVC: ").strip()
+    
+    print(f"Payment successful with {card_type} card ending in {card_number[-4:]}. Thank you for your booking!")
+
+    # Generate and display room number
+    room_number = generate_room_number(room_type)
+    if room_number:
+        print(f"Your room number is {room_number}. Enjoy your stay!")
+
+    # Generate and display confirmation code
+    confirmation_code = generate_confirmation_code()
+    print(f"Your booking confirmation code is: {confirmation_code}")
